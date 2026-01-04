@@ -1,0 +1,246 @@
+/* Chat Widget Container */
+#chat-widget {
+    position: fixed;
+    bottom: 0; /* Align to bottom like a taskbar element */
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    z-index: 1000;
+    font-family: sans-serif; /* Matches body font */
+}
+
+/* Chat Button (when minimized) - Styled like .btn from style.css */
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    background: #222; /* Matches nav background */
+    color: #fff;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: none; /* Removed soft shadows */
+    border: 1px solid #333;
+    z-index: 1001;
+    transition: background 0.2s;
+}
+
+#chat-toggle:hover {
+    background: #333;
+}
+
+#chat-toggle.hidden {
+    display: none;
+}
+
+/* Chat Container */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 2px solid #333; /* Matches page-header border */
+    border-bottom: none; /* Sits on bottom of screen */
+    box-shadow: none;
+    overflow: hidden;
+}
+
+#chat-container.hidden {
+    display: none;
+}
+
+/* Chat Header - Matches nav/header style */
+#chat-header {
+    background: #222;
+    color: #white;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #333;
+}
+
+#chat-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+#chat-minimize {
+    background: #777; /* btn-secondary color */
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 8px;
+}
+
+#chat-minimize:hover {
+    background: #333;
+}
+
+/* Conversation Starters */
+#chat-starters {
+    padding: 10px;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ccc;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+#chat-starters.hidden {
+    display: none;
+}
+
+.starter-button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #ccc; /* Matches input borders */
+    border-radius: 0; /* Sharp corners */
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.8rem;
+}
+
+.starter-button:hover {
+    background: #eee;
+    border-color: #333;
+}
+
+/* Chat Messages */
+#chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 300px;
+    min-height: 200px;
+    background: #fff;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.message-bubble {
+    max-width: 90%;
+    padding: 10px;
+    border-radius: 0; /* Sharp corners like feature-card */
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.message-user {
+    align-items: flex-end;
+}
+
+.message-user .message-bubble {
+    background: #eee;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.message-bot {
+    align-items: flex-start;
+}
+
+.message-bot .message-bubble {
+    background: #fff;
+    color: #333;
+    border: 1px solid #333; /* Strong border for bot focus */
+}
+
+.message-timestamp {
+    font-size: 0.7rem;
+    color: #777;
+    margin-top: 5px;
+    text-transform: uppercase;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: none;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background: #fff;
+    max-width: 50px;
+}
+
+.typing-indicator.active {
+    display: block;
+}
+
+.typing-dot {
+    background: #333;
+    width: 6px;
+    height: 6px;
+}
+
+/* Chat Input Area */
+#chat-input-container {
+    padding: 15px;
+    background: #fff;
+    border-top: 2px solid #333;
+    display: flex;
+    gap: 10px;
+}
+
+#chat-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc; /* Matches style.css input */
+    font-size: 0.9rem;
+    border-radius: 0;
+    font-family: sans-serif;
+}
+
+#chat-input:focus {
+    outline: none;
+    border-color: #333;
+}
+
+#chat-send {
+    padding: 10px 15px;
+    background: #333; /* Matches .btn style */
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+#chat-send:hover {
+    background: #555;
+}
+
+/* Scrollbar styling - simpler and flatter */
+#chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #fff;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #333;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    #chat-widget {
+        width: 100%;
+        right: 0;
+        left: 0;
+    }
+}

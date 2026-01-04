@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book.title} + ' - Book Details'">Book Details</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <h1>Book Recommendation System</h1>
+            <ul>
+                <li><a th:href="@{/}">Home</a></li>
+                <li><a th:href="@{/books}">Books</a></li>
+                <li><a th:href="@{/upload}">Upload RDF</a></li>
+                <li><a th:href="@{/manage-book}">Add Book</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="book-detail">
+            <div class="detail-header">
+                <h2 th:text="${book.title}">Book Title</h2>
+                <a th:href="@{/manage-book(id=${book.id})}" class="btn">Edit Book</a>
+            </div>
+
+            <div class="detail-content">
+                <div class="detail-section">
+                    <h3>Book Information</h3>
+                    <table class="info-table">
+                        <tr>
+                            <td><strong>Title:</strong></td>
+                            <td th:text="${book.title}">Title</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Author:</strong></td>
+                            <td>
+                                <span th:if="${book.author}"
+                                      th:text="${book.author}">Author></span>
+                                <span th:unless="${book.readingLevel}" style="color: #999;">Not found</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Reading Level:</strong></td>
+                            <td>
+                                <span th:if="${book.readingLevel}" 
+                                      th:class="'badge badge-' + ${#strings.toLowerCase(book.readingLevel)}"
+                                      th:text="${book.readingLevel}">Level</span>
+                                <span th:unless="${book.readingLevel}" style="color: #999;">Not specified</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Themes:</strong></td>
+                            <td>
+                                <span th:if="${#lists.isEmpty(book.themes)}" style="color: #999;">No themes</span>
+                                <span th:each="theme, iterStat : ${book.themes}">
+                                    <span class="badge badge-theme" th:text="${theme}">Theme</span>
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="detail-actions">
+                    <a th:href="@{/books}" class="btn btn-secondary">Back to Books</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Chat Widget -->
+    <div th:replace="~{fragments/chat :: chat}"></div>
+    <script th:src="@{/js/chat.js}"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book != null} ? 'Edit Book' : 'Add Book'">Manage Book</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+
+</head>
+<body>
+<nav>
+    <div class="nav-container">
+        <h1>Book Recommendation System</h1>
+        <ul>
+            <li><a th:href="@{/}">Home</a></li>
+            <li><a th:href="@{/books}">Books</a></li>
+            <li><a th:href="@{/upload}">Upload RDF</a></li>
+            <li><a th:href="@{/manage-book}">Add Book</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="form-header">
+        <h2 th:text="${book != null} ? 'Edit Book' : 'Add New Book'">Manage Book</h2>
+        <p th:if="${book != null}">Editing: <strong th:text="${book.title}">Title</strong></p>
+    </div>
+
+    <form th:action="@{/save-book}" method="post" class="book-form">
+        <div class="form-group">
+            <label for="id">Book ID: <span class="required">*</span></label>
+            <input type="text" id="id" name="id"
+                   th:value="${book != null} ? ${book.id} : ''"
+                   th:readonly="${book != null}"
+                   placeholder="e.g., HarryPotter, Dune" required>
+            <small th:if="${book != null}">ID cannot be changed after creation</small>
+            <small th:unless="${book != null}">No spaces allowed (use camelCase or underscores)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="title">Book Title: <span class="required">*</span></label>
+            <input type="text" id="title" name="title"
+                   th:value="${book != null} ? ${book.title} : ''"
+                   placeholder="e.g., Harry Potter and the Philosopher's Stone" required>
+        </div>
+
+        <div class="form-group">
+            <label for="author">Author:</label>
+            <input type="text" id="author" name="author"
+                   th:value="${book != null} ? ${book.author} : ''"
+                   placeholder="e.g., J.K. Rowling">
+            <small>Optional field</small>
+        </div>
+
+        <div class="form-group">
+            <label>Themes: <span class="required">*</span></label>
+            <small style="margin-bottom: 0.5rem; display: block;">Select at least one theme</small>
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="ScienceFiction"
+                           th:checked="${book != null and #lists.contains(book.themes, 'ScienceFiction')}">
+                    <span>Science Fiction</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Fantasy"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Fantasy')}">
+                    <span>Fantasy</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Mystery"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Mystery')}">
+                    <span>Mystery</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Murder"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Murder')}">
+                    <span>Murder</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Romance"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Romance')}">
+                    <span>Romance</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Adventure"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Adventure')}">
+                    <span>Adventure</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Horror"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Horror')}">
+                    <span>Horror</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="themes" value="Thriller"
+                           th:checked="${book != null and #lists.contains(book.themes, 'Thriller')}">
+                    <span>Thriller</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="readingLevel">Reading Level: <span class="required">*</span></label>
+            <select id="readingLevel" name="readingLevel" required>
+                <option value="">-- Select Reading Level --</option>
+                <option value="Beginner" th:selected="${book != null and book.readingLevel == 'Beginner'}">Beginner</option>
+                <option value="Intermediate" th:selected="${book != null and book.readingLevel == 'Intermediate'}">Intermediate</option>
+                <option value="Advanced" th:selected="${book != null and book.readingLevel == 'Advanced'}">Advanced</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn" th:text="${book != null} ? 'Update Book' : 'Add Book'">Save</button>
+            <a th:href="@{/books}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.querySelector('.book-form').addEventListener('submit', function(e) {
+        const checkboxes = document.querySelectorAll('input[name="themes"]:checked');
+        if (checkboxes.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one theme for the book.');
+        }
+    });
+</script>
+<!-- Chat Widget -->
+<div th:replace="~{fragments/chat :: chat}"></div>
+<script th:src="@{/js/chat.js}"></script>
+</body>
+</html>
