@@ -1,0 +1,65 @@
+!-- 1. List All Books with Their Authors and Titles --
+
+PREFIX ont: <http://www.co-ode.org/ontologies/ont.owl#>
+PREFIX book: <http://example.org/books#>
+
+SELECT ?title ?author
+WHERE {
+  ?book a book:Book .
+  ?book ont:title ?title .
+  ?book ont:author ?author .
+}
+
+!-- 2. Find Books Suitable for Intermediate Readers --
+
+PREFIX ont: <http://www.co-ode.org/ontologies/ont.owl#>
+PREFIX book: <http://example.org/books#>
+
+SELECT ?bookTitle
+WHERE {
+  ?book ont:suitableFor book:Intermediate .
+  ?book ont:title ?bookTitle .
+}
+
+!-- 3. Identify User Preferences --
+
+PREFIX ont: <http://www.co-ode.org/ontologies/ont.owl#>
+PREFIX book: <http://example.org/books#>
+PREFIX user: <http://example.org/users#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?userName ?preferredTheme ?readingLevel
+WHERE {
+  ?u rdf:type book:User .
+  ?u ont:name ?userName .
+  ?u ont:prefersTheme ?preferredTheme .
+  ?u ont:hasReadingLevel ?readingLevel .
+}
+
+!-- 4. Books Matching Bob Preferences --
+
+PREFIX ont: <http://www.co-ode.org/ontologies/ont.owl#>
+PREFIX book: <http://example.org/books#>
+PREFIX user: <http://example.org/users#>
+
+SELECT ?bookTitle ?author
+WHERE {
+  user:Bob ont:prefersTheme ?theme .
+  user:Bob ont:hasReadingLevel ?level .
+
+  ?book rdf:type book:Book .
+  ?book ont:belongsToTheme ?theme .
+  ?book ont:suitableFor ?level .
+  ?book ont:title ?bookTitle .
+  ?book ont:author ?author .
+}
+
+!--5. Count Books per Theme --
+
+PREFIX ont: <http://www.co-ode.org/ontologies/ont.owl#>
+
+SELECT ?theme (COUNT(?book) AS ?bookCount)
+WHERE {
+  ?book ont:belongsToTheme ?theme .
+}
+GROUP BY ?theme
