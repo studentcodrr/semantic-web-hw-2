@@ -24,7 +24,7 @@ public class RdfService {
     private Model model;
     private static final String RDF_FILE_PATH = "src/main/resources/data/books.rdf";
     private static final String BOOK_NS = "http://example.org/books#";
-    // private static final String USER_NS = "http://example.org/users#";
+    //private static final String USER_NS = "http://example.org/users#";
 
     @PostConstruct
     public void init() {
@@ -39,7 +39,7 @@ public class RdfService {
                 System.out.println("RDF file loaded successfully from classpath");
                 System.out.println("Model contains " + model.size() + " statements");
 
-                // DEBUG: all books
+                //DEBUG: all books
                 Resource bookClass = model.createResource(BOOK_NS + "Book");
                 ResIterator iter = model.listSubjectsWithProperty(RDF.type, bookClass);
                 int bookCount = 0;
@@ -73,7 +73,7 @@ public class RdfService {
         }
     }
 
-    // Save model
+    //save model
     public void saveRdfFile() {
         File file = new File(RDF_FILE_PATH);
         file.getParentFile().mkdirs();

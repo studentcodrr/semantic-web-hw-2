@@ -94,8 +94,8 @@ public class ChatService {
                 user = rdfService.getUserId(userId);
 
                 if (user != null) {
-                    String themePref = user.getPrefersTheme(); // e.g., "Fantasy"
-                    String levelPref = user.getReadingLevel(); // e.g., "Intermediate"
+                    String themePref = user.getPrefersTheme(); 
+                    String levelPref = user.getReadingLevel();
 
                     if (themePref != null && !themePref.isEmpty()) {
                         userPreferences += "User prefers " + themePref + " books. ";

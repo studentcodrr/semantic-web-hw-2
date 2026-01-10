@@ -1,12 +1,9 @@
-// Chat widget state
 let chatOpen = false;
 let isTyping = false;
 
-// Initialize chat on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadConversationStarters();
 
-    // Auto-resize textarea
     const chatInput = document.getElementById('chat-input');
     if (chatInput) {
         chatInput.addEventListener('input', function() {
@@ -16,25 +13,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Open chat widget
 function openChat() {
     chatOpen = true;
     document.getElementById('chat-container').classList.remove('hidden');
     document.getElementById('chat-toggle').classList.add('hidden');
     document.getElementById('chat-input').focus();
 
-    // Scroll to bottom
     scrollToBottom();
 }
 
-// Close chat widget
 function closeChat() {
     chatOpen = false;
     document.getElementById('chat-container').classList.add('hidden');
     document.getElementById('chat-toggle').classList.remove('hidden');
 }
 
-// Get page context
 function getPageContext() {
     const path = window.location.pathname;
     let context = {
@@ -57,7 +50,6 @@ function getPageContext() {
     return context;
 }
 
-// Load conversation starters
 async function loadConversationStarters() {
     const context = getPageContext();
 
@@ -77,7 +69,6 @@ async function loadConversationStarters() {
     }
 }
 
-// Display conversation starters
 function displayStarters(starters) {
     const startersContainer = document.getElementById('chat-starters');
     startersContainer.innerHTML = '';
@@ -100,7 +91,6 @@ function displayStarters(starters) {
     }
 }
 
-// Handle Enter key press
 function handleKeyPress(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
@@ -108,7 +98,6 @@ function handleKeyPress(event) {
     }
 }
 
-// Send message
 async function sendMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
@@ -117,20 +106,15 @@ async function sendMessage() {
         return;
     }
 
-    // Clear input
     input.value = '';
     input.style.height = 'auto';
 
-    // Hide starters after first message
     document.getElementById('chat-starters').classList.add('hidden');
 
-    // Display user message
     addMessage(message, 'user');
 
-    // Show typing indicator
     showTyping();
 
-    // Get page context
     const context = getPageContext();
 
     try {
@@ -148,7 +132,6 @@ async function sendMessage() {
 
         const data = await response.json();
 
-        // Hide typing indicator
         hideTyping();
 
         if (data.success) {
@@ -164,7 +147,6 @@ async function sendMessage() {
     }
 }
 
-// Add message to chat
 function addMessage(text, sender) {
     const messagesContainer = document.getElementById('chat-messages');
 
@@ -181,7 +163,6 @@ function addMessage(text, sender) {
     scrollToBottom();
 }
 
-// Show typing indicator
 function showTyping() {
     isTyping = true;
     document.getElementById('chat-send').disabled = true;
@@ -192,7 +173,6 @@ function showTyping() {
     scrollToBottom();
 }
 
-// Hide typing indicator
 function hideTyping() {
     isTyping = false;
     document.getElementById('chat-send').disabled = false;
@@ -202,7 +182,6 @@ function hideTyping() {
     }
 }
 
-// Scroll to bottom of messages
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chat-messages');
     if (messagesContainer) {

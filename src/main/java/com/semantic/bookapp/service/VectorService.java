@@ -60,7 +60,7 @@ public class VectorService {
 
     public List<Book> searchBooksForUser(String query, String userId, int limit) {
         User user = (userId != null) ? rdfService.getUserId(userId) : null;
-        List<Book> results = searchSimilarBooks(query, limit * 2); // Get more candidates
+        List<Book> results = searchSimilarBooks(query, limit * 2);
 
         if (user != null && user.getReadingLevel() != null) {
             return results.stream()
