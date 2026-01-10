@@ -22,7 +22,7 @@ public class BookController {
         return "books";
     }
 
-    // View individual book
+    //id book
     @GetMapping("/book/{id}")
     public String viewBook(@PathVariable String id, Model model) {
         Book book = rdfService.getBookById(id);
@@ -36,7 +36,7 @@ public class BookController {
         return "book-detail";
     }
 
-    // Show add/edit book form
+    //add/edit
     @GetMapping("/manage-book")
     public String manageBook(@RequestParam(required = false) String id, Model model) {
         if (id != null && !id.isEmpty()) {
@@ -48,7 +48,6 @@ public class BookController {
         return "manage-book";
     }
 
-    // Save book
     @PostMapping("/save-book")
     public String saveBook(
             @RequestParam String id,

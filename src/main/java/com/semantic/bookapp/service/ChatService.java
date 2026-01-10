@@ -30,12 +30,10 @@ public class ChatService {
 
     @PostConstruct
     public void initialize() {
-        System.out.println("Initializing LLM...");
+        System.out.println("Start...");
 
         if (apiKey == null || apiKey.equals("YOUR_GOOGLE_API_KEY_HERE")) {
-            System.err.println("⚠ WARNING: No Google API key configured!");
-            System.err.println("Please set google.api.key in application.properties");
-            System.err.println("Get a free key at: https://aistudio.google.com/app/apikey");
+            System.err.println("ERROR: No Google API key configured");
             return;
         }
 
@@ -45,12 +43,12 @@ public class ChatService {
                 .temperature(0.7)
                 .build();
 
-        System.out.println("✓ LLM initialized: " + modelName);
+        System.out.println("LLM initialized: " + modelName);
     }
 
     public String generateResponse(String userMessage, String pageContext, String bookId) {
         if (chatModel == null) {
-            return "Error: LLM not configured. Please set your Google API key in application.properties.";
+            return "Error: LLM not configured.";
         }
 
         try {
@@ -77,9 +75,9 @@ public class ChatService {
             return response;
 
         } catch (Exception e) {
-            System.err.println("Error generating response: " + e.getMessage());
+            System.err.println("ERROR: " + e.getMessage());
             e.printStackTrace();
-            return "I apologize, but I encountered an error processing your request.";
+            return "Error processing your request";
         }
     }
 
@@ -89,7 +87,7 @@ public class ChatService {
                         "%s\n" +
                         "INSTRUCTIONS:\n" +
                         "- Only use information from the books listed above\n" +
-                        "- If a book's author is listed as 'Gigel', use 'Gigel' (not the real author)\n" +
+                        "- If a book's author is listed as 'Something', use 'Something' (not the real author)\n" +
                         "- If the answer isn't in the database, say 'I don't have that information in my database'\n" +
                         "- Be concise and helpful\n" +
                         "- Don't mention that you're looking at a database or context\n\n" +
@@ -113,7 +111,7 @@ public class ChatService {
         List<Book> results = searchByAuthorAndTheme(author, theme);
 
         if (results.isEmpty()) {
-            return "I couldn't find any books matching those criteria in my database.";
+            return "I couldn't find any books matching those criteria.";
         }
 
         StringBuilder response = new StringBuilder();
@@ -138,7 +136,6 @@ public class ChatService {
                 String afterPattern = message.substring(index + pattern.length());
                 String[] words = afterPattern.split(" ");
 
-                // Take 1-3 words as author name
                 StringBuilder author = new StringBuilder();
                 for (int i = 0; i < Math.min(3, words.length); i++) {
                     String word = words[i].replaceAll("[^a-zA-Z ]", "").trim();

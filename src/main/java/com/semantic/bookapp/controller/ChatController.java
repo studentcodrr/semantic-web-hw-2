@@ -18,7 +18,6 @@ public class ChatController {
     @Autowired
     private ChatService chatService;
 
-    // Handle chat messages
     @PostMapping
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatMessage message) {
         try {
@@ -42,7 +41,6 @@ public class ChatController {
         }
     }
 
-    // Get context-aware conversation starters
     @GetMapping("/starters")
     public ResponseEntity<Map<String, Object>> getConversationStarters(
             @RequestParam(required = false) String pageType,

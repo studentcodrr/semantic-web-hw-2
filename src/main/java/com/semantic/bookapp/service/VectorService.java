@@ -41,10 +41,10 @@ public class VectorService {
             );
             bookEmbeddings.add(bookEmbedding);
 
-            System.out.println("✓ Embedded: " + book.getTitle());
+            System.out.println("> Embedded: " + book.getTitle());
         }
 
-        System.out.println("✓ Vector Database initialized with " + bookEmbeddings.size() + " books");
+        System.out.println("> Vector Database initialized with " + bookEmbeddings.size() + " books");
     }
 
     private String createTextRepresentation(Book book) {
