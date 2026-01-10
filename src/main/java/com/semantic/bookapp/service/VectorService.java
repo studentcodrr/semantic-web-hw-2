@@ -1,6 +1,8 @@
 package com.semantic.bookapp.service;
 
 import com.semantic.bookapp.model.Book;
+import com.semantic.bookapp.model.User;
+
 import com.semantic.bookapp.model.BookEmbedding;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -37,8 +39,7 @@ public class VectorService {
             BookEmbedding bookEmbedding = new BookEmbedding(
                     book,
                     embedding.vector(),
-                    textRepresentation
-            );
+                    textRepresentation);
             bookEmbeddings.add(bookEmbedding);
 
             System.out.println("> Embedded: " + book.getTitle());
@@ -48,29 +49,37 @@ public class VectorService {
     }
 
     private String createTextRepresentation(Book book) {
-        StringBuilder sb = new StringBuilder();
+        return String.format(
+                "The book titled '%s' was written by the author %s. " +
+                        "It belongs to the themes: %s. It is intended for %s readers.",
+                book.getTitle(),
+                (book.getAuthor() != null ? book.getAuthor() : "Unknown"),
+                String.join(", ", book.getThemes()),
+                (book.getReadingLevel() != null ? book.getReadingLevel() : "all"));
+    }
 
-        sb.append("Title: ").append(book.getTitle()).append(". ");
+    public List<Book> searchBooksForUser(String query, String userId, int limit) {
+        User user = (userId != null) ? rdfService.getUserId(userId) : null;
+        List<Book> results = searchSimilarBooks(query, limit * 2); // Get more candidates
 
-        if (book.getAuthor() != null) {
-            sb.append("Author: ").append(book.getAuthor()).append(". ");
+        if (user != null && user.getReadingLevel() != null) {
+            return results.stream()
+                    .filter(b -> b.getReadingLevel().equalsIgnoreCase(user.getReadingLevel()))
+                    .limit(limit)
+                    .collect(Collectors.toList());
         }
-
-        if (!book.getThemes().isEmpty()) {
-            sb.append("Themes: ").append(String.join(", ", book.getThemes())).append(". ");
-        }
-
-        if (book.getReadingLevel() != null) {
-            sb.append("Reading Level: ").append(book.getReadingLevel()).append(".");
-        }
-
-        return sb.toString();
+        return results.stream().limit(limit).collect(Collectors.toList());
     }
 
     public List<Book> searchSimilarBooks(String query, int limit) {
-        if (bookEmbeddings.isEmpty()) {
+        if (bookEmbeddings.isEmpty())
             return new ArrayList<>();
-        }
+
+        String lowerQuery = query.toLowerCase();
+        List<Book> exactMatches = bookEmbeddings.stream()
+                .map(BookEmbedding::getBook)
+                .filter(b -> lowerQuery.contains(b.getTitle().toLowerCase()))
+                .collect(Collectors.toList());
 
         Embedding queryEmbedding = embeddingModel.embed(query).content();
         float[] queryVector = queryEmbedding.vector();
@@ -78,6 +87,11 @@ public class VectorService {
         List<ScoredBook> scoredBooks = new ArrayList<>();
         for (BookEmbedding bookEmbedding : bookEmbeddings) {
             double similarity = cosineSimilarity(queryVector, bookEmbedding.getEmbedding());
+
+            if (lowerQuery.contains(bookEmbedding.getBook().getTitle().toLowerCase())) {
+                similarity += 0.5; 
+            }
+
             scoredBooks.add(new ScoredBook(bookEmbedding.getBook(), similarity));
         }
 

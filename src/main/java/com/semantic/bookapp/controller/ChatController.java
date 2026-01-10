@@ -29,7 +29,8 @@ public class ChatController {
             String response = chatService.generateResponse(
                     message.getMessage(),
                     message.getPageType(),
-                    message.getBookId()
+                    message.getBookId(),
+                    message.getUserId()
             );
 
             return ResponseEntity.ok(new ChatResponse(response));
@@ -44,10 +45,12 @@ public class ChatController {
     @GetMapping("/starters")
     public ResponseEntity<Map<String, Object>> getConversationStarters(
             @RequestParam(required = false) String pageType,
-            @RequestParam(required = false) String bookId) {
+            @RequestParam(required = false) String bookId,
+            jakarta.servlet.http.HttpSession session) {
 
         try {
-            List<String> starters = chatService.generateConversationStarters(pageType, bookId);
+            String userId = (String) session.getAttribute("currentUserId");
+            List<String> starters = chatService.generateConversationStarters(pageType, bookId, userId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("starters", starters);

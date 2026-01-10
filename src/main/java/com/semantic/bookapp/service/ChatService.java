@@ -1,6 +1,8 @@
 package com.semantic.bookapp.service;
 
 import com.semantic.bookapp.model.Book;
+import com.semantic.bookapp.model.User;
+
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +48,9 @@ public class ChatService {
         System.out.println("LLM initialized: " + modelName);
     }
 
-    public String generateResponse(String userMessage, String pageContext, String bookId) {
+    public String generateResponse(String userMessage, String pageContext, String bookId, String userId) {
         if (chatModel == null) {
-            return "Error: LLM not configured.";
+            return "Error: no LLM";
         }
 
         try {
@@ -56,20 +58,62 @@ public class ChatService {
                 return handleSearchQuery(userMessage);
             }
 
-            List<Book> relevantBooks = vectorService.searchSimilarBooks(userMessage, 3);
+            final Book currentBook = (bookId != null && !bookId.isEmpty())
+                    ? rdfService.getBookById(bookId)
+                    : null;
 
-            if (bookId != null && !bookId.isEmpty()) {
-                Book currentBook = rdfService.getBookById(bookId);
-                if (currentBook != null && !relevantBooks.contains(currentBook)) {
-                    relevantBooks.add(0, currentBook);
-                    if (relevantBooks.size() > 3) {
-                        relevantBooks = relevantBooks.subList(0, 3);
+            List<Book> relevantBooks = (currentBook != null)
+                    ? vectorService.searchBooksForUser(currentBook.getTitle(), userId, 3)
+                    : vectorService.searchBooksForUser(userMessage, userId, 3);
+            
+                    if (relevantBooks == null) {
+                relevantBooks = new ArrayList<>();
+            }
+
+            if (currentBook != null) {
+                relevantBooks = relevantBooks.stream()
+                        .filter(b -> !b.getId().equals(currentBook.getId()))
+                        .collect(Collectors.toList());
+            }
+
+            if (relevantBooks.size() > 3) {
+                relevantBooks = relevantBooks.subList(0, 3);
+            }
+
+            String context = vectorService.buildContext(relevantBooks);
+
+            if (relevantBooks.isEmpty()) {
+                context = "DATABASE STATUS: The database is currently empty for this specific query.";
+            }
+
+            User user = null;
+            String userPreferences = "";
+            String userInterests = "";
+
+            if (userId != null && !userId.isEmpty()) {
+                user = rdfService.getUserId(userId);
+
+                if (user != null) {
+                    String themePref = user.getPrefersTheme(); // e.g., "Fantasy"
+                    String levelPref = user.getReadingLevel(); // e.g., "Intermediate"
+
+                    if (themePref != null && !themePref.isEmpty()) {
+                        userPreferences += "User prefers " + themePref + " books. ";
+                    }
+                    if (levelPref != null && !levelPref.isEmpty()) {
+                        userPreferences += "User reading level is " + levelPref + ".";
                     }
                 }
             }
 
-            String context = vectorService.buildContext(relevantBooks);
-            String prompt = buildPrompt(context, userMessage);
+            if (currentBook != null && !currentBook.getThemes().isEmpty()) {
+                userInterests = "User looks at interested in "
+                        + currentBook.getThemes().get(0) + " books.";
+            }
+
+            String prompt = buildPrompt(context, userMessage)
+                    + "\nUSER PREFERENCES: " + userPreferences
+                    + "\nUSER INTERESTS: " + userInterests;
 
             String response = chatModel.generate(prompt);
             return response;
@@ -83,19 +127,23 @@ public class ChatService {
 
     private String buildPrompt(String context, String userMessage) {
         return String.format(
-                "You are a helpful book recommendation assistant. Answer questions based ONLY on the book data provided below.\n\n" +
+                "### SYSTEM INSTRUCTIONS ###\n" +
+                        "You are a strict RDF-based assistant. You have ZERO knowledge outside of the provided context.\n"
+                        +
+                        "1. Answer ONLY using the DATABASE provided below.\n" +
+                        "2. If the user asks about a book NOT in the database, you MUST say: 'I'm sorry, that book is not in my library.'\n"
+                        +
+                        "3. Do NOT use your own training data or general knowledge.\n" +
+                        "4. If the database says the author is 'Gigel', do NOT correct it to the real author.\n" +
+                        "\n" +
+                        "### DATABASE CONTEXT ###\n" +
                         "%s\n" +
-                        "INSTRUCTIONS:\n" +
-                        "- Only use information from the books listed above\n" +
-                        "- If a book's author is listed as 'Something', use 'Something' (not the real author)\n" +
-                        "- If the answer isn't in the database, say 'I don't have that information in my database'\n" +
-                        "- Be concise and helpful\n" +
-                        "- Don't mention that you're looking at a database or context\n\n" +
-                        "USER QUESTION: %s\n\n" +
-                        "ANSWER:",
-                context,
-                userMessage
-        );
+                        "\n" +
+                        "### USER MESSAGE ###\n" +
+                        "%s\n" +
+                        "\n" +
+                        "### YOUR RESPONSE ###",
+                context, userMessage);
     }
 
     private boolean isSearchQuery(String message) {
@@ -129,7 +177,7 @@ public class ChatService {
     }
 
     private String extractAuthor(String message) {
-        String[] patterns = {"author ", "by ", "written by "};
+        String[] patterns = { "author ", "by ", "written by " };
         for (String pattern : patterns) {
             int index = message.toLowerCase().indexOf(pattern);
             if (index != -1) {
@@ -142,7 +190,8 @@ public class ChatService {
                     if (word.isEmpty() || word.equalsIgnoreCase("and") || word.equalsIgnoreCase("the")) {
                         break;
                     }
-                    if (author.length() > 0) author.append(" ");
+                    if (author.length() > 0)
+                        author.append(" ");
                     author.append(word);
                 }
                 return author.toString();
@@ -154,8 +203,7 @@ public class ChatService {
     private String extractTheme(String message) {
         List<String> knownThemes = Arrays.asList(
                 "Science Fiction", "Fantasy", "Mystery", "Murder",
-                "Romance", "Adventure", "Horror", "Thriller"
-        );
+                "Romance", "Adventure", "Horror", "Thriller");
 
         for (String theme : knownThemes) {
             if (message.toLowerCase().contains(theme.toLowerCase())) {
@@ -183,27 +231,38 @@ public class ChatService {
                 .collect(Collectors.toList());
     }
 
-    public List<String> generateConversationStarters(String pageType, String bookId) {
+    public List<String> generateConversationStarters(String pageType, String bookId, String userId) {
         List<String> starters = new ArrayList<>();
+        User user = (userId != null) ? rdfService.getUserId(userId) : null;
 
         if ("book-detail".equals(pageType) && bookId != null) {
             Book book = rdfService.getBookById(bookId);
             if (book != null) {
-                starters.add("Tell me more about " + book.getTitle());
-
-                if (book.getAuthor() != null) {
-                    starters.add("Who is " + book.getAuthor() + "?");
+                if (book.getTitle() != null) {
+                    starters.add("Who is the author of " + book.getTitle() + "?");
                 }
-
+                if (book.getReadingLevel() != null) {
+                    starters.add("What other books have " + book.getReadingLevel() + " level?");
+                }
                 if (!book.getThemes().isEmpty()) {
-                    String firstTheme = book.getThemes().get(0);
-                    starters.add("What are similar " + firstTheme + " books?");
+                    starters.add("What are similar " + book.getThemes().get(0) + " books?");
                 }
             }
         } else if ("books".equals(pageType)) {
-            starters.add("What book would you recommend for me?");
-            starters.add("Show me all Science Fiction books");
-            starters.add("What are the most advanced reading level books?");
+            if (user != null) {
+                if (user.getPrefersTheme() != null) {
+                    starters.add("What are more " + user.getPrefersTheme() + " books?");
+                }
+                if (user.getReadingLevel() != null) {
+                    starters.add("What books have " + user.getReadingLevel() + " level?");
+                }
+                starters.add("Tell me more Science Fiction books");
+
+            } else {
+                starters.add("Show me all Science Fiction books");
+                starters.add("Give me 3 random recomandations.");
+            }
+
         } else {
             starters.add("What books do you have?");
             starters.add("Recommend a book for beginners");

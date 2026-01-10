@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/chat.css}">
 
 </head>
+
 <body>
     <nav>
         <div class="nav-container">
@@ -17,6 +19,15 @@
                 <li><a th:href="@{/books}">Books</a></li>
                 <li><a th:href="@{/upload}">Upload RDF</a></li>
                 <li><a th:href="@{/manage-book}">Add Book</a></li>
+                <form th:action="@{/select-user}" method="post" class="user-form">
+                    <label for="user-select" style="color: white; margin-right: 10px;">User:</label>
+                    <select name="userId" id="user-select" onchange="this.form.submit()" class="btn-small">
+                        <option value="">Select User</option>
+                        <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.name}"
+                            th:selected="${session.currentUserId == u.id}">
+                        </option>
+                    </select>
+                </form>
             </ul>
         </div>
     </nav>
@@ -29,4 +40,5 @@
         </div>
     </div>
 </body>
+
 </html>

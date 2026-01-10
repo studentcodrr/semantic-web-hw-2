@@ -1,10 +1,16 @@
 package com.semantic.bookapp.service;
 
 import com.semantic.bookapp.model.Book;
+import com.semantic.bookapp.model.User;
+
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
+import org.apache.jena.query.ResultSet;
 
 import jakarta.annotation.PostConstruct;
 import java.io.*;
@@ -18,7 +24,7 @@ public class RdfService {
     private Model model;
     private static final String RDF_FILE_PATH = "src/main/resources/data/books.rdf";
     private static final String BOOK_NS = "http://example.org/books#";
-    private static final String USER_NS = "http://example.org/users#";
+    // private static final String USER_NS = "http://example.org/users#";
 
     @PostConstruct
     public void init() {
@@ -33,7 +39,7 @@ public class RdfService {
                 System.out.println("RDF file loaded successfully from classpath");
                 System.out.println("Model contains " + model.size() + " statements");
 
-                //DEBUG: all books
+                // DEBUG: all books
                 Resource bookClass = model.createResource(BOOK_NS + "Book");
                 ResIterator iter = model.listSubjectsWithProperty(RDF.type, bookClass);
                 int bookCount = 0;
@@ -67,7 +73,7 @@ public class RdfService {
         }
     }
 
-    //Save model
+    // Save model
     public void saveRdfFile() {
         File file = new File(RDF_FILE_PATH);
         file.getParentFile().mkdirs();
@@ -115,17 +121,74 @@ public class RdfService {
         return triples;
     }
 
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        Resource userClass = model.createResource(BOOK_NS + "User");
+
+        ResIterator iter = model.listSubjectsWithProperty(RDF.type, userClass);
+        while (iter.hasNext()) {
+            Resource userResource = iter.nextResource();
+
+            String uri = userResource.getURI();
+            String id = uri.substring(uri.indexOf('#') + 1);
+
+            Statement nameStmt = userResource.getProperty(model.createProperty("http://example.org/users#name"));
+            String name = (nameStmt != null) ? nameStmt.getString() : id;
+
+            Statement levelStmt = userResource
+                    .getProperty(model.createProperty("http://example.org/users#hasReadingLevel"));
+            String readingLevel = null;
+            if (levelStmt != null && levelStmt.getObject().isResource()) {
+                readingLevel = levelStmt.getResource().getLocalName(); // e.g., "Intermediate"
+            }
+
+            Statement themeStmt = userResource
+                    .getProperty(model.createProperty("http://example.org/users#prefersTheme"));
+            String prefersTheme = null;
+            if (themeStmt != null && themeStmt.getObject().isResource()) {
+                prefersTheme = themeStmt.getResource().getLocalName(); // e.g., "Fantasy"
+            }
+
+            users.add(new User(id, name, readingLevel, prefersTheme));
+        }
+        return users;
+    }
+
+    public User getUserId(String userId) {
+        String userUri = "http://example.org/users#" + userId;
+
+        Resource userRes = model.getResource(userUri);
+        if (userRes == null) {
+            return null;
+        }
+
+        Statement nameStmt = userRes.getProperty(model.getProperty("http://example.org/users#name"));
+        String name = nameStmt != null ? nameStmt.getString() : null;
+
+        Statement levelStmt = userRes.getProperty(model.getProperty("http://example.org/users#hasReadingLevel"));
+        String readingLevel = null;
+        if (levelStmt != null) {
+            Resource levelRes = levelStmt.getResource();
+            readingLevel = levelRes.getLocalName();
+        }
+
+        Statement themeStmt = userRes.getProperty(model.getProperty("http://example.org/users#prefersTheme"));
+        String prefersTheme = null;
+        if (themeStmt != null) {
+            Resource themeRes = themeStmt.getResource();
+            prefersTheme = themeRes.getLocalName();
+        }
+
+        return new User(userId, name, readingLevel, prefersTheme);
+    }
+
     public List<Book> getAllBooks() {
         List<Book> books = new ArrayList<>();
         Resource bookClass = model.createResource(BOOK_NS + "Book");
 
-        System.out.println("DEBUG: Looking for books with type: " + bookClass.getURI());
-        System.out.println("DEBUG: Model size: " + model.size());
-
         ResIterator iter = model.listSubjectsWithProperty(RDF.type, bookClass);
         while (iter.hasNext()) {
             Resource bookResource = iter.nextResource();
-            System.out.println("DEBUG: Processing book: " + bookResource.getURI());
             Book book = extractBookFromResource(bookResource);
             books.add(book);
         }
@@ -193,29 +256,25 @@ public class RdfService {
 
         bookResource.addProperty(
                 model.createProperty(BOOK_NS + "title"),
-                model.createLiteral(title)
-        );
+                model.createLiteral(title));
 
         if (author != null && !author.trim().isEmpty()) {
             bookResource.addProperty(
                     model.createProperty(BOOK_NS + "author"),
-                    model.createLiteral(author)
-            );
+                    model.createLiteral(author));
         }
 
         if (themes != null) {
             for (String theme : themes) {
                 bookResource.addProperty(
                         model.createProperty(BOOK_NS + "belongsToTheme"),
-                        model.createResource(BOOK_NS + theme)
-                );
+                        model.createResource(BOOK_NS + theme));
             }
         }
 
         bookResource.addProperty(
                 model.createProperty(BOOK_NS + "suitableFor"),
-                model.createResource(BOOK_NS + readingLevel)
-        );
+                model.createResource(BOOK_NS + readingLevel));
 
         saveRdfFile();
     }

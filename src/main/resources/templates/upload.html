@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/chat.css}">
 
 </head>
+
 <body>
     <nav>
         <div class="nav-container">
@@ -17,13 +19,22 @@
                 <li><a th:href="@{/books}">Books</a></li>
                 <li><a th:href="@{/upload}">Upload RDF</a></li>
                 <li><a th:href="@{/manage-book}">Add Book</a></li>
+                <form th:action="@{/select-user}" method="post" class="user-form">
+                    <label for="user-select" style="color: white; margin-right: 10px;">User:</label>
+                    <select name="userId" id="user-select" onchange="this.form.submit()" class="btn-small">
+                        <option value="">Select User</option>
+                        <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.name}"
+                            th:selected="${session.currentUserId == u.id}">
+                        </option>
+                    </select>
+                </form>
             </ul>
         </div>
     </nav>
 
     <div class="container">
         <h2>Upload and Visualize RDF/XML File</h2>
-        
+
         <div class="upload-section">
             <form id="upload-form" enctype="multipart/form-data">
                 <div class="form-group">
@@ -53,7 +64,7 @@
 
         document.getElementById('upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const fileInput = document.getElementById('rdfFile');
             if (!fileInput.files || !fileInput.files[0]) {
                 document.getElementById('status').innerHTML = '<p class="error">Please select a file first.</p>';
@@ -62,18 +73,18 @@
 
             const formData = new FormData();
             formData.append('rdfFile', fileInput.files[0]);
-            
+
             const statusDiv = document.getElementById('status');
             statusDiv.innerHTML = '<p class="loading">Uploading and parsing RDF file...</p>';
-            
+
             try {
                 const response = await fetch('/upload-rdf', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     statusDiv.innerHTML = '<p class="success">File uploaded successfully. Found ' + result.triples.length + ' triples.</p>';
                     document.getElementById('graph-container').style.display = 'block';
@@ -199,4 +210,5 @@
     <div th:replace="~{fragments/chat :: chat}"></div>
     <script th:src="@{/js/chat.js}"></script>
 </body>
+
 </html>

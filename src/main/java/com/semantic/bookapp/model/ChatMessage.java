@@ -5,6 +5,7 @@ public class ChatMessage {
     private String context;
     private String pageType;
     private String bookId;
+    private String userId;
 
     public ChatMessage() {
     }
@@ -39,6 +40,10 @@ public class ChatMessage {
 
     public String getBookId() {
         return bookId;
+    }
+
+    public String getUserId() {
+        return userId;
     }
 
     public void setBookId(String bookId) {
